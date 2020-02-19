@@ -173,7 +173,104 @@ JDK中有以下四个常用的函数式接口
 
    接收一个参数返回一个布尔值的判断型接口
 
+### 1.6 方法引用
 
+lambda表达式存在冗余场景，如果lambda表达式中仅调用一个静态的方法，可以使用方法引用来代替lambda表达式。（使用方法引用相当于让这个指定的方法去重写接口的抽象方法，到时候调用接口的抽象方法就是调用这个静态方法）
+
+**方法引用的格式**
+
+符号表示：::
+
+符号说明：双冒号为方法引用运算符，而它所在的表达式被称为方法引用
+
+应用场景：如果lambda表达式所要实现的方案，已经有其他方法存在相同的方法，那么则可以使用方法引用
+
+**常见的方法引用的方式**
+
+1. instanceName::methodName    对象::方法名
+
+   ```java
+   public static void test1(){
+       Date now = new Date();
+   //        Supplier<Long> supplier = ()->{
+   //            return now.getTime();
+   //        };
+       //使用方法引用
+       Supplier<Long> supplier = now::getTime;
+       Long aLong = supplier.get();
+       System.out.println("aLong= "+aLong);       
+   }
+   ```
+
+   注意
+
+   1. 被引用的方法，参数要和接口种的抽象方法的参数一样
+   2. 当接口的抽象方法有返回值时，被引用的方法也必须有相同返回值
+
+2. ClassName::staticMethodName    类名::静态方法
+
+   ```java
+   public static void test2(){
+   //        Supplier<Long> supplier = () ->{
+   //            return System.currentTimeMillis();
+   //        };
+       Supplier<Long> supplier = System::currentTimeMillis;
+       Long time = supplier.get();
+       System.out.println("time = "+time);
+   }
+   ```
+
+3. ClassName::methodName    类名::实例方法
+
+   类名::实例方法实际上会将第一个参数作为方法的调用者。
+
+   ```java
+   public static void test3(){
+   //        Function<String,Integer> function = (str)->{
+   //            return str.length();
+   //        };
+       Function<String,Integer> function = String::length;
+       int account = function.apply("hello");
+       System.out.println(account);
+   
+       //两个参数的提供者接口
+       BiFunction<String,Integer,String> function1 = String::substring;
+       String s = function1.apply("helloworld",3);
+       System.out.println(s);
+   }
+   ```
+
+4. ClassName::new    类名::new调用构造器
+
+   ```java
+   public static void test4(){
+   //        Supplier<Map<String,Integer>> supplier = ()->{
+   //            return new HashMap<>();
+   //        };
+       Supplier<Map<String,Integer>> supplier = HashMap::new;
+       Map<String,Integer> map = supplier.get();
+       System.out.println("map: "+map);
+   }
+   ```
+
+5. TypeName[]::new    String[]::new调用数组的构造器
+
+   数组也是object的子类，所以同样具有构造器，只是语法稍有不同
+
+   ```java
+   public static void test5(){
+   //        Function<Integer,int[]> function = (length)->{
+   //            return new int[length];
+   //        };
+       Function<Integer,int[]> function = int[]::new;
+       int[] arr = function.apply(10);
+       System.out.println(Arrays.toString(arr));
+   }
+   ```
+
+小结：
+
+方法引用是对lambda表达式符合特定情况下的一种缩写，它使得我们的lambda表达式更加精简，也可以理解为lambda表达式的缩写形式，不过要注意的是方法引用只能引用已经存在的方法。
 
 ## 二、集合stream流式操作
 
