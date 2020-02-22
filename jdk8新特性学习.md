@@ -274,22 +274,316 @@ lambda表达式存在冗余场景，如果lambda表达式中仅调用一个静�
 
 ## 二、集合stream流式操作
 
+### 2.1 Stream流简介
+
+Java 8 引入，位于java.util.stream包中，与 java.io 包里的输入输出流 InputStream 和 OutputStream 是不同的概念。**Stream API 借助 Lambda 表达式，可以提高编程效率和程序可读性**。
+
+Stream流不是一种数据结构，不保存数据，而是对数据的加工处理，Stream流可以看作是流水线上的一个工序，在流水线上通过多个工序将一个原材料加工成目标产品。
+
+```java
+public static void main(String[] args) {
+    //需求:1.拿到所有姓张的  2.拿到名字长度等于三的  3.打印数据
+    ArrayList<String> list = new ArrayList<>();
+    Collections.addAll(list,"张三","李四","张三丰","张强","李四光");      
+    //采用流式操作
+    list.stream().filter((s)->{
+        return s.startsWith("张");
+    }).filter((s)->{
+        return s.length()==3;
+    }).forEach(System.out::println);
+}
+```
+
+### 2.2 获取Stream流的两种方式
+
+1. 根据Collection获取流
+
+   Collection接口中有一个默认的方法，default Stream<E> stream()，实现了Collection接口的集合类都可以通过调用stream方法获取流，Map接口可以通过分别获取键值的集合来获取键值的流，或者获取实体集合的流
+
+   ```java
+   List<String> list = new ArrayList<>();
+   Stream<String> stringStream = list.stream();
+       
+   Map<String,String> map = new HashMap<>();
+   Stream<String> keyStream = map.keySet().stream();
+   Stream<String> valueStream = map.values().stream();
+   Stream<Map.Entry<String,String>> entryStream = map.entrySet().stream();
+   ```
+
+2. Stream类的静态of方法获取流
+
+   基本类型数组会被看成是一个元素进行操作，而无法对其中的元素进行操作。
+
+   ```java
+   Stream<String> stream = Stream.of("a","b","c");
+   
+   String[] strs = {"a","b","c"};
+   Stream<String> stream2 = Stream.of(strs);
+   ```
+
+### 2.3 Stream常用方法和注意事项
+
+通常我们根据方法的返回值类型将stream类的方法分为两种
+
+* 终结方法：返回值类型不再是Stream类型的方法，不再支持链式调用。
+* 非终结方法：返回值类型仍然是Stream类型的方法，支持链式调用。
+
+| 方法名   | 方法作用           | 返回值类型 | 方法种类 |
+| -------- | ------------------ | ---------- | -------- |
+| count    | 统计个数           | long       | 终结     |
+| forEach  | 遍历处理           | void       | 终结     |
+| filter   | 过滤               | Stream     | 函数拼接 |
+| limit    | 取前几个           | Stream     | 函数拼接 |
+| skip     | 跳过前几个         | Stream     | 函数拼接 |
+| map      | 映射               | Stream     | 函数拼接 |
+| concat   | 组合               | Stream     | 函数拼接 |
+| distinct | 去重               | Stream     | 函数拼接 |
+| sorted   | 排序               | Stream     | 函数拼接 |
+| reduce   | 归纳总结得到一个值 | Stream     | 函数拼接 |
+| concat   | 合并两个流为一个   | Stream     | 函数拼接 |
+
+**注意事项**
+
+1. Stream只能操作一次
+2. Stream方法返回的是最新的流
+3. Stream不调用终结方法，中间的操作不会执行
+
+### 2.4 收集stream流中的结果
+
+stream流中必须调用终结方法才会执行中间的操作，有时候我们希望把流中的处理结果保存起来，stream提供了collect方法完成对数据的保存。
+
+1. 收集Stream流中的数据到集合中
+
+   ```java
+   public static void test1(){
+       Stream<String> stream = Stream.of("a","b","c");
+           //将流中的数据收集到集合中
+   //        List<String> collect = stream.collect(Collectors.toList());
+   //        System.out.println("collect = "+collect);
+   
+       //收集到指定的集合中
+   	ArrayList<String> collect=stream.collect(Collectors.toCollection(ArrayList::new));
+       System.out.println(collect);
+   }
+   ```
+
+2. 收集Stream流中的数据到数组中
+
+   ```java
+   public static void test2(){
+       Stream<String> stream = Stream.of("a","b","c");
+           //收集到数组中(转成object对象不方便)
+   //        Object[] objects = stream.toArray();
+   //        for (Object o : objects){
+   //            System.out.println("o = "+o);
+   //        }
+   
+       String[] strings = stream.toArray(String[]::new);
+       for (String s :strings){
+           System.out.println("string = "+s +" 长度 = "+s.length());
+       }
+   }
+   ```
+
+### 2.5 Stream流中数据操作
+
+流操作主程序
+
+```java
+public static void main(String[] args) {
+        Stream<Student> studentStream = Stream.of(
+                new Student("张三",18,172.0),
+                new Student("张三丰",18,172.0),
+                new Student("李四",18,168.0),
+                new Student("李四光",23,159.0),
+                new Student("老子",23,180.0)
+        );
+        test1(studentStream);
+    }
+```
+
+1. 对stream流中的结果进行聚合计算
+
+   ```java
+   public static void test1(Stream<Student> studentStream){
+       //获取最大值
+       //Optional<Student> max = studentStream.collect(Collectors.maxBy((s1, s2) -> s1.getAge() - s2.getAge()));
+       //System.out.println("最大值 "+ max.get().toString());
+       //获取最小值
+       //Optional<Student> min = studentStream.collect(Collectors.minBy((s1, s2) -> s1.getAge() - s2.getAge()));
+       //System.out.println("最小值 "+ min.get());
+       //求和
+       //Integer sum = studentStream.collect(Collectors.summingInt(s -> s.getAge()));
+       //System.out.println("总和 "+ sum);
+       //求平均值
+       //Double avg = studentStream.collect(Collectors.averagingDouble(s -> s.getHigh()));
+       //System.out.println("平均身高 "+ avg);
+       //统计数量
+       Long total = studentStream.collect(Collectors.counting());
+       System.out.println("统计数量 "+ total);
+   }
+   ```
+
+2. 对stream流中的数据进行分组
+
+   ```java
+   public static void test2(Stream<Student> studentStream){
+       //年龄大于20的为一组小于20的为一组
+       Map<String, List<Student>> map = studentStream.collect(Collectors.groupingBy(s -> {
+           if (s.getAge() > 20) {
+               return "大于20";
+           } else {
+               return "小于20";
+           }
+       }));
+       map.forEach((k,v)->{
+           System.out.println(k + "::" + v);
+       }); 
+   }
+   ```
+
+3. 对stream流中的数据进行多级分组
+
+   ```java
+   public static void test3(Stream<Student> studentStream){
+           //年龄大于20的为一组小于20的为一组，然后按
+           Map<Integer, Map<String, List<Student>>> map = studentStream.collect(Collectors.groupingBy(Student::getAge, Collectors.groupingBy(s -> {
+               if (s.getHigh() > 170) {
+                   return "超过一米七";
+               } else {
+                   return "不超过一米七";
+               }
+           })));
+           map.forEach((k,v)->{
+               System.out.println(k);
+               v.forEach((k2,v2)->{
+                   System.out.println(k2 + "::" +v2);
+               });
+           });
+       }
+   ```
+
+4. 对流中的数据进行分区
+
+   ```java
+   public static void test4(Stream<Student> studentStream){
+           //年龄大于20的为一组小于20的为一组，然后按
+           Map<Boolean, List<Student>> map = studentStream.collect(Collectors.partitioningBy(s -> {
+               return s.getHigh() > 170;
+           }));
+           map.forEach((k,v)->{
+               System.out.println(k + "::"+ v);
+           });
+       }
+   ```
+
+5. 对流中的数据进行拼接
+
+   ```java
+   public static void test5(Stream<Student> studentStream){
+           //年龄大于20的为一组小于20的为一组，然后按
+           String names = studentStream.map(Student::getName).collect(Collectors.joining("__"));
+           System.out.println(names);
+       }
+   ```
+
+### 2.6 并行的stream流
+
+为了提高流中数据的处理效率，流处理提供了并行计算的方法，需要注意的是并不是所有的场景都可以进行并行计算，要考虑线程安全问题。解决线程安全问题可以使用synchronize锁，或者使用线程安全的集合。
+
+串行计算的流实例
+
+```java
+public static void test1(){
+        Stream.of(1,2,3,4,5,6).filter(s->{
+            System.out.println(Thread.currentThread()+"---"+s);
+            return s>3;
+        }).count();
+    }
+```
+
+**获取并行流的两种方式**
+
+1. 直接获取并行流
+
+   ```java
+   public static void test2(){
+       List<String> list = new ArrayList<>();
+       Stream<String> stream = list.parallelStream();
+   }
+   ```
+
+2. 将串行流转换为并行流
+
+   ```java
+   public static void test3(){
+       List<String> list = new ArrayList<>();
+       Stream<String> stream = list.stream().parallel();
+   
+   }
+   ```
+
+**并行流实现原理fork/join框架**
+
+**Fork/Join原理-分治法**
+
+ForkJoinPool主要用来使用分治法来解决问题。典型的应用比如快速排序算法。ForkJoinPool需要使用相对少的线程来处理大量的任务。比如要对1000万个数据进行排序，那么就会将这个任务分成两个500万的排序任务和一个针对这两个数组500万数据的合并任务。以此类推，对500万的数据进行相同的分割，到最后会设置一个阈值来规定数据规模到多少时停止这样的分割。比如，当元素数量小于10时会停止分割，转而使用插入排序对他们进行排序。那么到最后，所有的任务加起来大概2000000+个，问题的关键在于，对一个任务而言，只有当它所有的子任务完成后它才能够被执行。
+
+**Fork/Join原理-工作窃取算法**
+
+Fork/Join最核心的地方就是利用现代硬件设备多核，再操作时会有空闲的cpu，那么如何利用好这个空闲的cpu就成了提供性能的关键，而这里我们要提到的工作窃取算法就是整个fork/join框架的核心理念Fork/join工作窃取算法是指某个线程从其他队列里窃取任务来执行。
+
+##  三、新的时间日期API
 
 
-## 三、接口的增强
+
+## 四、可重复注解
 
 
 
-## 四、并行数组排序
+## 五、使用Optional处理null
 
+optional是一个没有子类的工具类，Optional是一个可以为null的容器对象。它的主要作用就是为了解决避免Null检测。防止NullPointerException。
 
+以前对null的处理方式
 
-## 五、Optional中避免Null检查
+```java
+public static void test1(){
+        String userName = "张三";
+        //String userName = null;
+        if(userName != null){
+            System.out.println("用户名为: " + userName);
+        }else{
+            System.out.println("用户名不存在");
+        }
+    }
+```
 
+使用optional对null的处理方式
 
+```java
+public static void test2(){
+        //1. 创建optiona对象(of方法只能传入一个具体值，不能传入null)
+        //如果要创建一个空的容器，可以使用ofNullable方法，既可以穿非空又可以传空值。
+        //empty: 存入的是null
+        Optional<String> optional = Optional.of("张三");
+        Optional<String> optional1 = Optional.ofNullable(null);
+        Optional<String> optional2 = Optional.empty();
 
-##  六、新的时间日期API
+        //2.isPresent:判断optional中是否有值,有返回true否则false
+        boolean present = optional.isPresent();
+        System.out.println("present = "+present);
 
+        //3. get:获取Optional中的值,如果有值就返回具体值，否则就报错
+        System.out.println(optional.get());
 
+        //通常get方法不单独使用
+        if(optional2.isPresent()){
+            System.out.println(optional.get());
+        }else {
+            System.out.println("没有值");
+        }
 
-## 七、可重复注解
+    }
+```
+
