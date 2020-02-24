@@ -535,7 +535,243 @@ Fork/Join最核心的地方就是利用现代硬件设备多核，再操作时�
 
 ##  三、新的时间日期API
 
+### 3.1 新旧时间API介绍
 
+**旧版本日期时间API存在的问题**
+
+1. 设计较差：在java.util和java.sql的包中都有日期类，java.util.Date同时包含日期和时间，而java.sql.Date仅包含日期。此外用于格式化和解析的类再java.text包中定义
+2. 非线程安全：java.util.Date是非线程安全的，所有的日期都是可变的，这是java日期类最大的问题之一。
+3. 时区处理麻烦：日期类不提供国际化，没有时区支持，因此java引入了java引入了java.util.Calendar和java.util.TimeZone类，但它们同样存在上述所有问题。
+
+**新日期时间API介绍**
+
+jdk8中新增了一个全新的日期时间API，这套API设计合理，是线程安全的。新的日期及时间API位于java.time包中，一些关键类如下
+
+| 类名              | 描述                                | 格式                    |
+| ----------------- | ----------------------------------- | ----------------------- |
+| LocalDate         | 表示日期，包含年月日                | 2020-02-23              |
+| LocalTime         | 表示时间，包含时分秒                | 16:38:54.158549300      |
+| LocalDateTime     | 表示日期时间，包含年月日时分秒      | 2020-02-23T15:33:56.750 |
+| DateTimeFormatter | 日期时间格式化类                    |                         |
+| instance          | 时间戳，表示一个特定的时间瞬间      |                         |
+| Duration          | 用于计算两个时间（LocalTime）的距离 |                         |
+| Preiod            | 用于计算两个日期（LocalDate）的距离 |                         |
+| ZoneDateTime      | 包含时区的时间                      |                         |
+
+
+
+java中使用的历法是ISO 8601日历系统，它是世界民用历法，也就是我们所说的公历，平年每年365天，闰年每年366天，此外java 8 还提供了四套其他历法，分别为：
+
+1. ThaiBuddhisDate：泰国佛教历
+2. MinguoDate：中华民国历
+3. JapaneseDate：日本历
+4. HijtahDate：伊斯兰历
+
+### 3.2 日期时间类
+
+1. LocalDate类,可以获取单独的年月日
+
+   ```java
+   public static void testLocalDate(){
+           LocalDate now = LocalDate.now();
+           System.out.println("now = "+now);
+           //创建指定的日期
+           LocalDate date = LocalDate.of(2020,2,29);
+           System.out.println("date = "+date);
+           //获取单独的年月日
+           System.out.println(now.getYear());
+           System.out.println(now.getMonth());
+           System.out.println(now.getDayOfMonth());
+       }
+   ```
+
+2. LocalTime类，可以获取单独的时分秒纳秒
+
+   ```java
+   public static void testLocalTime(){
+           LocalTime time = LocalTime.of(13,26,39);
+           System.out.println("time = " +time);
+   
+           LocalTime now = LocalTime.now();
+           System.out.println("now = "+now);
+   
+           System.out.println(now.getHour());
+           System.out.println(now.getMinute());
+           System.out.println(now.getSecond());
+           System.out.println(now.getNano());
+       }
+   ```
+
+3. LocalDateTime类，可以获取单独的年月日时分秒
+
+   ```java
+    public static void testLocalDateTime(){
+           LocalDateTime dateTime = LocalDateTime.of(2020,2,20,20,20,20);
+           System.out.println("dateTime = "+dateTime);
+   
+           LocalDateTime now = LocalDateTime.now();
+           System.out.println("now = "+now);
+           
+           System.out.println(now.getYear());
+           System.out.println(now.getMonth());
+           System.out.println(now.getDayOfMonth());
+           System.out.println(now.getHour());
+           System.out.println(now.getMinute());
+           System.out.println(now.getSecond());
+       }
+   ```
+
+### 3.3 日期时间格式化与解析
+
+jdk8新的日期时间api提供了新的格式化类，DateTimeFormatter.可以使用JDK自带的时间格式或者自定义的时间格式来格式化与解析日期时间。
+
+```java
+public static void test1(){
+        //创建一个日期
+        LocalDateTime now = LocalDateTime.now();
+        // 格式化
+        // 指定时间格式
+        // JDK自带的时间格式
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        //自定义日期格式
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy年MM月dd HH时mm分ss秒");
+
+        String format = now.format(formatter);
+        String format1 = now.format(formatter1);
+        System.out.println(format);
+        System.out.println(format1);
+
+        //解析
+        LocalDateTime parse = LocalDateTime.parse("2020年02月23 21时16分47秒", formatter1);
+        System.out.println(parse);
+    }
+```
+
+### 3.4 Instant时间戳
+
+主要是给程序统计时间使用，可以操作纳秒
+
+```java
+public static void test(){
+        Instant now = Instant.now();
+        System.out.println("当前时间戳 = " + now);
+        //获取从1970年1月1日00：00：00的秒
+        System.out.println(now.getNano());
+        System.out.println(now.getEpochSecond());
+        System.out.println(now.toEpochMilli());
+        System.out.println(System.currentTimeMillis());
+
+        Instant instant = Instant.ofEpochSecond(5);
+        System.out.println(instant);
+        //Instant内部保存了秒和纳秒，一般用于统计程序耗时
+        //对instant操作只能加减秒、毫秒，纳秒
+        System.out.println(now.plusSeconds(10));
+        System.out.println(now.plusMillis(20));
+        System.out.println(now.plusNanos(100));
+    }
+```
+
+### 3.5 计算时间差的类
+
+1. Duration：用于计算两个世界（LocalTime）的距离
+
+   ```java
+   public static void test1(){
+           LocalTime now = LocalTime.now();
+           LocalTime localTime = LocalTime.of(10,15,25);
+   
+           Duration duration = Duration.between(localTime,now);
+           System.out.println("相差天：" + duration.toDays());
+           System.out.println("相差小时：" + duration.toHours());
+           System.out.println("相差分钟：" + duration.toMinutes());
+           System.out.println("相差秒：" + duration.getSeconds());
+           System.out.println("相差毫秒：" + duration.toMillis());
+       }
+   ```
+
+2. Period：用于计算两个日期（LocalDate）的距离
+
+   ```java
+   public static void test2(){
+           LocalDate now = LocalDate.now();
+           LocalDate date = LocalDate.of(1985,9,23);
+   
+           Period period = Period.between(date,now);
+           System.out.println("相差年："+period.getYears());
+           System.out.println("相差月："+period.getMonths());
+           System.out.println("相差日："+period.getDays());
+   
+       }
+   ```
+
+### 3.6 时间校准
+
+有时候我们可能需要获取例如：将日期调整到“下个月的第一天”等操作，可以通过时间校正器来完成
+
+* TemporalAdjuster：时间校正器 (自定义调整时间)
+* TemporalAdjusters：通过静态方法提供了大量常用的TemporalAdjuster的实现
+
+```java
+//TemporalAdjuster：自定义调整时间
+public static void test1(){
+        //得到下个月的第一天
+        LocalDateTime now = LocalDateTime.now();
+        TemporalAdjuster firsDayOfNextMonth = (temporal) ->{
+            LocalDateTime dateTime = (LocalDateTime)temporal;
+            return dateTime.plusMonths(1).withDayOfMonth(1);
+        };
+        System.out.println(now.with(firsDayOfNextMonth));
+    }
+```
+
+```java
+public static void test2(){
+        LocalDateTime now = LocalDateTime.now();
+        //jdk自带的调整器
+        //1.调整到下个月的第一天
+        System.out.println(now.with(TemporalAdjusters.firstDayOfNextMonth()));
+        //2.调整到下一年的第一天
+        System.out.println(now.with(TemporalAdjusters.firstDayOfNextYear()));
+    }
+```
+
+### 3.7 设置时区
+
+java8中加入了对时区的支持，LocalDate、LocalTime、LocalDateTime都是不带时区的，带时区的时间类分别为ZonedDate、ZonedTime、ZonedDateTime。
+
+其中每个时区都对应着ID、ID格式为“区域/城市”。例如：Asia/Shanghai
+
+ZonedId：该类中包含了所有的时区信息
+
+```java
+public static void test1(){
+        //获取所有时区的ID
+        ZoneId.getAvailableZoneIds().forEach(System.out::println);
+
+        //不带时区的时间，获取计算机当前的时间
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("中国当前时间："+now);
+
+        //创建带时区的类
+        //创建时间标准时间
+        ZonedDateTime zonedDateTime = ZonedDateTime.now(Clock.systemUTC());
+        System.out.println("世界标准时间当前时间："+zonedDateTime);
+
+        //使用计算机默认时区
+        ZonedDateTime now1 = ZonedDateTime.now();
+        System.out.println("计算机默认时区时间："+now1);
+
+        //使用指定的时区创建时间
+        ZonedDateTime now2 = ZonedDateTime.now(ZoneId.of("Asia/Tokyo"));
+        System.out.println("指定时区创建时间："+now2);
+        //withZoneSameInstant 修改时区,同时修改时间
+        ZonedDateTime withZoneSameInstant = now2.withZoneSameInstant(ZoneId.of("Asia/Shanghai"));
+        System.out.println("withZoneSameInstant" +withZoneSameInstant);
+        //withZoneSameInstant 修改时区,不修改时间
+        ZonedDateTime withZoneSameLocal = now2.withZoneSameLocal(ZoneId.of("Asia/Shanghai"));
+        System.out.println("withZoneSameLocal" +withZoneSameLocal);
+    }
+```
 
 ## 四、可重复注解
 
@@ -545,7 +781,7 @@ Fork/Join最核心的地方就是利用现代硬件设备多核，再操作时�
 
 optional是一个没有子类的工具类，Optional是一个可以为null的容器对象。它的主要作用就是为了解决避免Null检测。防止NullPointerException。
 
-以前对null的处理方式
+**以前对null的处理方式**
 
 ```java
 public static void test1(){
@@ -559,7 +795,7 @@ public static void test1(){
     }
 ```
 
-使用optional对null的处理方式
+**使用optional对null的处理方式**
 
 ```java
 public static void test2(){
