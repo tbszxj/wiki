@@ -773,9 +773,102 @@ public static void test1(){
     }
 ```
 
-## 四、可重复注解
+## 四、可重复注解与类型注解
 
+### 4.1 可重复注解
 
+自从java5中引入注解以来，注解开始变得非常流行，并在各个框架和项目中被广泛使用。不过注解有一个很大的限制是：在同一个地方不能多次使用同一个注解。jdk8引入了重复注解的概念，允许在同一个地方多次使用同一个注解。在jdk8中使用@Repeatable注解定义重复注解。
+
+重复注解使用的步骤：
+
+1. 定义重复的注解容器注解
+
+   ```java
+   @Retention(RetentionPolicy.RUNTIME)
+   @interface MyTests {
+       //可重复注解容器
+       MyTest[] value();
+   }
+   ```
+
+2. 定义一个可以重复的注解
+
+   ```java
+   @Retention(RetentionPolicy.RUNTIME)
+   @Repeatable(MyTests.class)
+   @interface MyTest {
+       String value();
+   }
+   ```
+
+3. 配置多个重复的注解
+
+   ```java
+   @MyTest("ma")
+       @MyTest("mb")
+       public void test(){
+   
+       }
+   ```
+
+4. 解析可重复注解
+
+   ```java
+   public static void main(String[] args) throws NoSuchMethodException {
+           //4.解析可重复注解
+           //获取类上的可重复注解
+           //getAnnotationsByType是新增的注解，用于获取可重复的注解
+           MyTest[] annotationsByType = RepeatableAnnotationDemo.class.getAnnotationsByType(MyTest.class);
+           for(MyTest myTest : annotationsByType){
+               System.out.println(myTest);
+           }
+           //获取方法上的重复注解
+           MyTest[] tests = RepeatableAnnotationDemo.class.getMethod("test").getAnnotationsByType(MyTest.class);
+           for(MyTest myTest :tests){
+               System.out.println(myTest);
+           }
+       }
+   ```
+
+### 4.2 类型注解
+
+JDK8为@Tarfet元注解新增了两种类型：TYPE_PARAMETER，TYPE_USE
+
+TYPE_PARAMETER：表示该注解能写在类型参数的声明语句中。类型参数声明如：<T>、<T extends Xxx>
+
+TYPE_USE ：表示注解可以在任何用到类型的地方使用。
+
+TYPE_PARAMETER的使用
+
+```java
+@Target(ElementType.TYPE_PARAMETER)
+@interface TypeParam{
+
+}
+```
+
+```java
+public <@TypeParam E extends Integer> void test(){
+
+}
+```
+
+TYPE_USE的使用
+
+```java
+@Target(ElementType.TYPE_USE)
+@interface NotNull {
+
+}
+```
+
+```java
+private @NotNull int a= 10;
+    
+public void test1(@NotNull String str,@NotNull int a){
+        
+}
+```
 
 ## 五、使用Optional处理null
 
