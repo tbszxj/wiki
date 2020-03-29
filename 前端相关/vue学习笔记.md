@@ -105,42 +105,10 @@ vue将data中的文本数据插入到HTML中使用的是Mustache语法（也就�
    </script>
    ```
 
-2. v-model
 
-   ```html
-<div id="app">
-       <h2 v-html="url"></h2>
-   </div>
-   <script src="../js/vue.js"></script>
-   <script>
-       const app = new Vue({
-           el: '#app',
-           data: {
-               message: 'hello world!',
-               url: '<a href="https://www.baidu.com">百度一下</a>'
-           }
-       })
-   </script>
-   ```
-   
-3. v-text
+   **更多的关于vue的指令介绍参考官网的教程**
 
-   ```html
-<div id="app">
-       <h2>{{message}}</h2>
-       <h2 v-text="message"></h2>
-   </div>
-   <script src="../js/vue.js"></script>
-   <script>
-       const app = new Vue({
-           el: '#app',
-           data: {
-               message: 'hello world!'
-           }
-       })
-   </script>
-   ```
-   
+   [https://cn.vuejs.org/v2/api/#%E6%8C%87%E4%BB%A4](https://cn.vuejs.org/v2/api/#指令)
 
 ## 二、组件化开发
 
