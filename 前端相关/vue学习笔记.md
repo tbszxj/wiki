@@ -107,10 +107,8 @@ vue将data中的文本数据插入到HTML中使用的是Mustache语法（也就�
 
 2. v-model
 
-   
-
    ```html
-   <div id="app">
+<div id="app">
        <h2 v-html="url"></h2>
    </div>
    <script src="../js/vue.js"></script>
@@ -124,13 +122,11 @@ vue将data中的文本数据插入到HTML中使用的是Mustache语法（也就�
        })
    </script>
    ```
-
+   
 3. v-text
 
-   
-
    ```html
-   <div id="app">
+<div id="app">
        <h2>{{message}}</h2>
        <h2 v-text="message"></h2>
    </div>
@@ -144,20 +140,90 @@ vue将data中的文本数据插入到HTML中使用的是Mustache语法（也就�
        })
    </script>
    ```
-
-4. v-
-
-   ```html
    
-   ```
-
-   
-
-5. 
 
 ## 二、组件化开发
 
+### 2.1 组件化的基本使用
 
+组件的使用分为三个步骤：
+
+```mermaid
+graph TD
+A(调用Vue.extend方法创建组件构造器) -->B(调用Vue.component方法注册组件)
+B --> C(在Vue实例的作用范围内使用组件)
+```
+
+1. 创建组件构造器
+
+   ```javascript
+   const cpnC = Vue.extend({
+       template:`<div>
+       <h2>我是组件标题</h2>
+       <p>我是组件内容1</p>
+       <p>我是组件内容2</p>
+     </div>`
+     });
+   ```
+
+2. 注册组件
+
+   ```javascript
+   Vue.component('my-cpn',cpnC);
+   ```
+
+3. 使用组件
+
+   ```html
+   <div id="app">
+     <my-cpn></my-cpn>
+   </div>
+   ```
+
+### 2.2 全局组件和局部组件
+
+1. 使用Vue.component方法注册全局组件
+
+   ```javascript
+   Vue.component('my-cpn',cpnC);
+   ```
+
+2. 使用Vue实例的component方法注册局部主键
+
+   ```javascript
+   components: {
+     //注册局部组件，前面是标签名，后面是组件构造器
+     cpn: cpnC
+   }
+   ```
+
+### 2.3父组件和子组件
+
+在一个组件的构造器中component方法中注册另一个组件，被注册的组件就成为了该组件的子组件，可以在该组件的template中使用
+
+```javascript
+//1.创建第一个组件构造器
+  const cpn1 = Vue.extend({
+    template:`<div>
+      <h2>我是组件1标题</h2>
+      <p>我是组件1内容</p>
+    </div>`
+  });
+  //2.创建第二个组件构造器
+  const cpn2 = Vue.extend({
+    template:`<div>
+      <h2>我是组件2标题</h2>
+      <p>我是组件2内容</p>
+      <cpn1></cpn1>
+    </div>`,
+    components: {
+      //在一个组件中注册另一个组件
+      //被注册的组件即成为该组件的子组件
+      //可以在该组件的template中使用
+      cpn1: cpn1
+    }
+  });
+```
 
 ## 三、Vue CLI详解
 
