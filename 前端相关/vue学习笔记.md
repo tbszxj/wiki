@@ -193,6 +193,18 @@ B --> C(在Vue实例的作用范围内使用组件)
   });
 ```
 
+### 2.4 父子组件间通信
+
+父组件向子组件传递信息通过props，子组件向父组件传递信息需要通过自定义事件
+
+```mermaid
+graph LR
+A(parent父组件) -->|pass props| B(child子组件)
+B -->|$emit events| A
+```
+
+
+
 ## 三、Vue CLI详解
 
 
