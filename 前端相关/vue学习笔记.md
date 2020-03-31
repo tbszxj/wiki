@@ -203,7 +203,123 @@ A(parent父组件) -->|pass props| B(child子组件)
 B -->|$emit events| A
 ```
 
+1. 父传子通过props
 
+   定义子组件，在props属性中定义需要从父组件传过来的属性
+
+   ```html
+   <template id="cpn">
+     <div>
+       <h2>{{cmessage}}</h2>
+       <ul>
+         <li v-for="item in cmovies">{{item}}</li>
+       </ul>
+     </div>
+   </template>
+   ```
+
+   ```javascript
+   const cpn = {
+       template: '#cpn',
+       props: {
+         cmessage: {
+           type: String,//设置类型
+           default: 'aaa',//设置默认值
+           required: true//设置改属性是否必传
+         },
+         cmovies: {
+           //类型是array或对象时传递的默认值必须是一个函数
+           type: Array,
+           default(){
+             return []
+           },
+           required: true
+         }
+       }
+     };
+   ```
+
+   定义父组件
+
+   ```javascript
+   const app = new Vue({
+       el: '#app',
+       data: {
+         message: 'hello world!',
+         movies: ['海王','葫芦娃','小虾米']
+       },
+       components: {
+         cpn
+       }
+     })
+   ```
+
+   数据传递，将父组件定义的数据赋值给子组件props属性中定义的属性
+
+   ```html
+   <div id="app">
+     <cpn :cmovies="movies" :cmessage="message"></cpn>
+   </div>
+   ```
+
+2. 子传父通过自定义事件
+
+   定义子组件
+
+   ```html
+   <template id="cpn">
+     <div>
+       <button v-for="item in categories" @click="btnClick(item)">{{item.name}}</button>
+     </div>
+   </template>
+   ```
+
+   ```javascript
+   const cpn = {
+       template: '#cpn',
+       data(){
+         return {
+           categories:[
+             {id:'aaa',name:'热门推荐'},
+             {id:'bbb',name:'数码办公'},
+             {id:'ccc',name:'生活用品'},
+             {id:'ddd',name:'家用电器'}
+           ]
+         }
+       },
+       methods: {
+         btnClick(item){
+           //向父组件发送事件
+           this.$emit('item-click',item);
+         }
+       }
+     };
+   ```
+
+   定义父组件
+
+   ```javascript
+   const app = new Vue({
+       el: '#app',
+       methods: {
+         handleClick(item){
+           console.log(item);
+         }
+       },
+       components: {
+         cpn
+       }
+     })
+   ```
+
+   子组件通过事件向父组件传递信息
+
+   ```html
+   <div id="app">
+     <!--父组件监听子组件的自定义事件来处理-->
+     <cpn @item-click="handleClick"></cpn>
+   </div>
+   ```
 
 ## 三、Vue CLI详解
 
