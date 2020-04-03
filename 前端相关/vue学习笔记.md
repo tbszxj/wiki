@@ -321,6 +321,274 @@ B -->|$emit events| A
    </div>
    ```
 
+### 2.5 父子组件访问
+
+父组件访问子组件
+
+1. 通过$children的方式
+
+   ```html
+   <!--子组件的使用-->
+   <div id="app">
+     <cpn></cpn>
+     <cpn></cpn>
+     <cpn></cpn>
+     <button @click="btnClick">按钮</button>
+   </div>
+   ```
+
+   ```html
+   <!--子组件模板-->
+   <template id="cpn">
+     <h2>我是子组件</h2>
+   </template>
+   ```
+
+   ```javascript
+   //父子组件的定义
+   const app = new Vue({
+       el: '#app',
+       data: {
+         message: 'hello world!'
+       },
+       methods: {
+         btnClick(){
+           //children方式通常时获取所有子组件时使用
+           console.log(this.$children);
+           this.$children[0].showMessage();
+           console.log(this.$children[0].name);
+         }
+       },
+       components: {
+         cpn: {
+           template: '#cpn',
+           data(){
+             return {
+               name : '子组件名字'
+             }
+           },
+           methods: {
+             showMessage (){
+               console.log("子组件显示");
+             }
+           }
+         }
+       }
+     })
+   ```
+
+2. 通过$refs的方式
+
+   ```html
+   <!--子组件的使用,加上ref标签-->
+   <div id="app">
+     <cpn ref="first"></cpn>
+     <cpn></cpn>
+     <cpn></cpn>
+     <button @click="btnClick">按钮</button>
+   </div>
+   ```
+
+   ```html
+   <template id="cpn">
+     <h2>我是子组件</h2>
+   </template>
+   ```
+
+   ```javascript
+   const app = new Vue({
+       el: '#app',
+       data: {
+         message: 'hello world!'
+       },
+       methods: {
+         btnClick(){
+           //refs方式时候获取某个子组件时
+           console.log(this.$refs);
+           console.log(this.$refs.first.name);
+         }
+       },
+       components: {
+         cpn: {
+           template: '#cpn',
+           data(){
+             return {
+               name : '子组件名字'
+             }
+           },
+           methods: {
+             showMessage (){
+               console.log("子组件显示");
+             }
+           }
+         }
+       }
+     })
+   ```
+
+子组件访问父组件和根组件
+
+```html
+<!--根组件中使用子组件-->
+<div id="app">
+  <cpn></cpn>
+</div>
+```
+
+```html
+<!--子组件定义-->
+<template id="cpn">
+  <ccpn></ccpn>
+</template>
+<!--子组件中的子组件-->
+<template id="ccpn">
+  <div>
+    <h2>我是子组件</h2>
+    <button @click="btnClick">按钮</button>
+  </div>
+</template>
+```
+
+```javascript
+const app = new Vue({
+    el: '#app',
+    data: {
+      message: 'hello world!'
+    },
+    components: {
+      cpn: {
+        template: '#cpn',
+        components: {
+          ccpn: {
+            template: '#ccpn',
+            methods: {
+              btnClick(){
+                //子组件访问父组件parent
+                console.log(this.$parent);
+                //子组件访问根组件
+                console.log(this.$root);
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+```
+
+### 2.6 插槽的使用
+
+插槽的使用主要是为了组件有更好的扩展性,有些组件可能结构类似但里面的东西略有不同,每个组件单独封装有些冗余,封装成一个又无法通用,此时就可以预留插槽,保留结构共性,使用内容的不同.
+
+1. 基本使用
+
+   ```html
+   <div id="app">
+     <cpn><button>按钮</button></cpn>
+     <cpn><span>哈哈哈</span></cpn>
+     <cpn><i>呵呵呵</i></cpn>
+     <cpn></cpn>
+   </div>
+   ```
+
+   ```html
+   <template id="cpn">
+     <div>
+       <h2>我是组件</h2>
+       <p>我是组件内容</p>
+       <!--可以给插槽赋一个默认值，如果没有传显示默认值-->
+       <slot><button>按钮</button></slot>
+     </div>
+   </template>
+   ```
+
+   ```javascript
+   const app = new Vue({
+       el: '#app',
+       data: {
+         message: 'hello world!'
+       },
+       components: {
+         cpn: {
+           template: '#cpn'
+         }
+       }
+     })
+   ```
+
+2. 具名插槽
+
+   ```html
+   <div id="app">
+     <cpn><span slot="center">标题</span></cpn>
+   </div>
+   ```
+
+   ```html
+   <template id="cpn">
+     <div>
+       <slot name="left">左边</slot>
+       <slot name="center">中间</slot>
+       <slot name="right">右边</slot>
+     </div>
+   </template>
+   ```
+
+   js中组件定义同上
+
+3. 作用域插槽
+
+   ```html
+   <div id="app">
+     <cpn></cpn>
+     <cpn>
+       <!--目的是获取子组件中的pLanguages-->
+       <template slot-scope="slot">
+         <!--<span v-for="item in slot.data">{{item}} -&#45;&#45; </span>-->
+         <span>{{slot.data.join('  ---  ')}}</span>
+       </template>
+     </cpn>
+     <cpn>
+       <template slot-scope="slot">
+       <!--<span v-for="item in slot.data">{{item}} *** </span>-->
+         <span>{{slot.data.join('  ***  ')}}</span>
+       </template>
+     </cpn>
+   </div>
+   ```
+
+   ```html
+   <template id="cpn">
+     <div>
+       <slot :data="pLanguages">
+         <ul>
+           <li v-for="item in pLanguages">{{item}}</li>
+         </ul>
+       </slot>
+     </div>
+   </template>
+   ```
+
+   ```javascript
+   const app = new Vue({
+       el: '#app',
+       data: {
+         message: 'hello world!',
+         isShow: true
+       },
+       components: {
+         cpn: {
+           template: '#cpn',
+           data(){
+             return {
+               pLanguages: ['java','javaScript','css','C++']
+             }
+           }
+         }
+       }
+     })
+   ```
+
 ## 三、Vue CLI详解
 
 
