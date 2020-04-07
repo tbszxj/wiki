@@ -354,7 +354,7 @@ module.exports = {
 1. 安装对应的插件
 
    ```powershell
-   npm install html-webpack-plugin --save-dev
+   npm install html-webpack-plugin@3.2.0 --save-dev
    ```
 
 2. 配置
@@ -373,5 +373,101 @@ module.exports = {
    };
    ```
 
-### 4.3 
+### 4.3 uglifyjs-webpack-plugin
 
+压缩js代码插件
+
+1. 安装对应插件
+
+   ```powershell
+   npm install uglifyjs-webpack-plugin@1.1.1 --save-dev
+   ```
+
+2. 配置
+
+   ```javascript
+   const uglifyJsWebpackPlugin = require('uglifyjs-webpack-plugin');
+   
+   module.exports = {
+     ...
+     plugins: [
+       new uglifyJsWebpackPlugin()
+     ]
+   };
+   ```
+
+   
+
+## 五、搭建本地服务器
+
+使用webpack搭建一个本地的node服务器,devserver也是作为webpack中的一个选项，这个选项本身可以设置如下属性
+
+* contentBase：为哪一个文件夹提供本地服务，默认是根文件夹
+* port：端口号
+* inline：页面实时刷新
+* historyApiFallback：在SPA页面中依赖HTML5的history模式
+
+1. 安装对应插件
+
+   ```powershell
+   npm install webpack-dev-server@2.9.1 --save-dev
+   ```
+
+2. 配置webpack.config.js
+
+   ```javascript
+   module.exports = {
+     ...
+     devServer:{
+       contentBase: './dist',
+       inline: true
+     }
+   };
+   ```
+
+   package.json中的script中新增
+
+   ```json
+   "dev": "webpack-dev-server"
+   ```
+
+3. 运行服务器
+
+   ```powershell
+   npm run dev
+   ```
+
+## 六、配置文件的分离
+
+有些配置我们可能在开发的时候不需要在发布时才需要，例如代码的丑化压缩，这时就可以将配置文件进行分离
+
+1. 创建build文件夹，在文件夹下创建不同的配置文件，一般按使用的场景分成基础配置，开发环境配置，生产环境配置。
+
+2. 安装插件进行配置文件的整合
+
+   ```powershell
+   npm install webpack-merge --save-dev
+   ```
+
+3. 配置合并文件
+
+   ```javascript
+   const uglifyJsWebpackPlugin = require('uglifyjs-webpack-plugin');
+   const WebpackMerge = require('webpack-merge');
+   const baseConfig = require('./base.config');
+   
+   module.exports = WebpackMerge(baseConfig,{
+     plugins: [
+       new uglifyJsWebpackPlugin()
+     ],
+   });
+   ```
+
+4. 修改package.json中的script
+
+   ```javascript
+   "build": "webpack --config ./build/prod.config.js",
+   "dev": "webpack-dev-server --config ./build/dev.config.js"
+   ```
+
+   注意：打包文件的路径要根据配置文件所在路径进行对应的修改。
