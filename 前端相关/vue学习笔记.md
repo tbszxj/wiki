@@ -591,11 +591,332 @@ const app = new Vue({
 
 ## 三、Vue CLI详解
 
+### 3.1 脚手架的基本使用
 
+1. 安装脚手架
+
+   ```powershell
+   #全局安装脚手架3
+   npm install -g @vue/cli
+   #如果在脚手架三的基础上希望使用脚手架2还需要再安装
+   #vue init的运行效果跟vue-cli@2.x的效果相同
+   npm install -g @vue/cli-init
+   ```
+
+2. 创建项目
+
+   ```powershell
+   #脚手架2创建项目
+   vue init webpack my-project
+   #脚手架3创建项目
+   vue create my-project
+   ```
+
+### 3.2 runtime-only和runtime+compiler的区别
+
+两者的区别主要在于main.js中,在程序运行的流程中流程中，
+
+rc模式：template-->ast-->render-->vdom-->ui
+
+ro模式：render-->vdom-->ui
+
+| runtime-only                                                 | runtime+compiler                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| import Vue from 'vue'<br/>import App from './App'<br/><br/>Vue.config.productionTip = false<br/><br/>/* eslint-disable no-new */<br/>new Vue({<br/>  el: '#app',<br/>  render: h => h(App)<br/>}) | import Vue from 'vue'<br/>import App from './App'<br/><br/>Vue.config.productionTip = false<br/><br/>/* eslint-disable no-new */<br/>new Vue({<br/>  el: '#app',<br/>  components: { App },<br/>  template: '<App/>'<br/>}) |
+
+**VueCLI3配置文件的查看和修改**
+
+在VueCLI3中查看和修改配置文件的三种方式
+
+**查看**
+
+1. 启动配置服务器：vue ui，导入项目在配置中查看
+2. node安装的vue包中config目录下查看相关配置信息
+
+**修改**
+
+在项目根目录下创建vue.config.js文件对vue进行相关配置,通过module导出，打包时脚手架会将这个配置文件和vue中的配置文件进行合并
+
+```javascript
+module.exports = {
+  
+}
+```
 
 ## 四、vue-router路由相关
 
+### 4.1 路由基本概念
 
+**前端路由和后端路由**
+
+路由分前端路由和后端路由，传统的使用JSP进行动态页面开发的网站属于后端路由，每一个url请求会返回一个渲染后的html文件，浏览器将html进行渲染展示。
+
+前端路由是在前后端分离后针对SPA应用的，单页面应用在初次加载时完成所有静态资源的加载，根据前端路由来在不同的时候展示不同的页面。
+
+**URL的hash和浏览器的history**
+
+URL的hasn也就是锚点（#），本质上是改变window.location的href属性，我们可以通过直接赋值location.hash来改变href，但页面不发生刷新
+
+```javascript
+location.hash = 'home'
+//执行后对应的url：http://localhost:8080/#/home
+```
+
+通过history也可以做到改变页面不刷新页面的效果
+
+```javascript
+history.pushState({},{},'home')
+//执行后对于的url：http://localhost:8080/home
+history.replaceState({},{},'xxx')//replace和push的区别在于不保存记录，无法前进或返回
+```
+
+### 4.2 vue-router基本使用
+
+1. 安装vue-router
+
+   ```powershell
+   npm install vue-router --save
+   ```
+
+2. 在模块化工程中使用它
+
+   ```
+   1. 导入路由对象，并调用Vue.use(VueRouter)
+   2. 创建路由实例，并且传入路由映射配置
+   3. 在Vue的实例中挂载创建的路由实例
+   ```
+
+3. 设置默认展示组件
+
+   ```javascript
+   //配置一个路由/，重定向到默认展示的组件路径
+   {
+       path:'/',
+       redirect: '/home'
+   }
+   ```
+
+4. 使用history模式进行路由切换
+
+   ```javascript
+   //创建路由的时候增加模式属性
+   export default new Router({
+     //配置路由和组件之间的关系
+     routes: [...],
+     mode:'history'
+   })
+   ```
+
+**router-link标签补充**
+
+* to: 设置路由path
+
+* tag：设置要渲染成的标签，默认是<A>标签
+* replace：不需要赋值，让路由不使用pushState，而是使用history的replaceState
+* active-class：设置选中路由新增class名字（可以在创建路由对象时设置）
+
+**通过代码进行路由跳转**
+
+```javascript
+//通过$router属性来进行跳转
+this.$router.push('/home')
+```
+
+**动态路由**
+
+在路径的配置时指定动态的参数，格式如下
+
+```javascript
+{
+    path:'/user/:userId',
+    name:'User',
+    component:User
+}
+```
+
+路由跳转的时候需要给动态的参数赋值
+
+```html
+<div id="app">
+    <router-link to="/home">首页</router-link>
+    <router-link to="/about">关于</router-link>
+    <!--<router-link to="/user/zhangsan">用户</router-link>-->
+    <router-link v-bind:to="'/user/'+userId">用户</router-link>
+    <router-view/>
+</div>
+```
+
+**路由的懒加载**
+
+vue将不同的路由需要的js文件打包到单独的js文件中，请求某个路由只请求对于的js文件。js文件分包配置如下
+
+将原先引入后直接使用的方式改为，请求时引入文件的方式
+
+```javascript
+//import Home from '@/components/Home'
+//import About from '@/components/About'
+//import User from '@/components/User'
+const Home = () => import('../components/Home')
+const About = () => import('../components/About')
+const User = () => import('../components/User')
+```
+
+### 4.3 vue-router嵌套路由
+
+嵌套路由的映射配置
+
+```javascript
+{
+      path: '/home',
+      name: 'Home',
+      component: Home,
+      children: [         
+        {//设置默认打开路径
+          path: '',
+          redirect: 'news'
+        },
+        {//子路径
+          path: 'news',
+          component: HomeNews
+        },
+        {
+          path: 'message',
+          component: HomeMessage
+        }
+      ]
+    },
+```
+
+嵌套路由home中的配置
+
+```html
+<template>
+<div>
+  <h2>我是首页</h2>
+  <router-link to="/home/news">新闻</router-link>
+  <router-link to="/home/message">消息</router-link>
+  <router-view></router-view>
+</div>
+</template>
+```
+
+### 4.4 vue-router参数传递
+
+参数的传递主要有两种方式
+
+1. params
+
+   * 配置路由格式：/router/:id
+
+   * 传递的方式：在path后面跟上对应的值
+
+   * 传递后形成的路径：/router/123，/router/abc
+
+     ```html
+     <router-link :to="'/user/'+userId">用户</router-link>
+     ```
+
+     ```html
+     <h2>{{$route.params.userId}}</h2>
+     ```
+
+2. query
+
+   * 配置路由格式：/router，也就是普通配置
+
+   * 传递的方式：对象中使用query的key作为传递的方式
+
+   * 传递后形成的路径：/router？id=123，/router？id=abc
+
+     ```html
+     <router-link :to="{path:'/profile',query:{name:'zxj',age:23}}">档案</router-link>
+     ```
+
+     ```html
+     <p>{{$route.query.name}}</p>
+     <p>{{$route.query.age}}</p>
+     ```
+
+**不直接通过router-link标签进行跳转**
+
+```javascript
+methods: {
+    userClick(){
+      this.$router.push('/user/'+this.userId)
+    },
+    profileClick(){
+      this.$router.push({
+        path: '/profile',
+        query: {
+          name: 'zxj',
+          age: 24
+        }
+      })
+    }
+```
+
+### 4.5 vue-router导航守卫
+
+实现不同的页面展示不同的title
+
+使用生命周期方法created在页面创建时修改title（需要每个文件单独写，太麻烦）
+
+```javascript
+<script>
+  export default {
+    name: "About",
+    created() {
+      document.title = '关于'
+    }
+  }
+</script>
+```
+
+使用导航守卫
+
+```javascript
+//在路由配置信息中新增元信息
+{
+      path: '/about',
+      name: 'About',
+      component: About,
+      meta: {
+        title: '关于'
+      }
+    }
+```
+
+```javascript
+//导航守卫
+router.beforeEach((to,from,next) => {
+  // 从from跳转到to
+  document.title = to.matched[0].meta.title
+  next()
+})
+```
+
+### 4.6 keep-alive
+
+keep-alive是vue内置的一个组件，可以使被包含的组件保留状态，或避免重新渲染
+
+它有两个重要的属性
+
+* include - 字符串或者正则表达，只有匹配的组件会被缓存
+* exclude - 字符串或正则表达式，任何匹配的组件都不会被缓存
+
+**router-view也是一个组件，如果直接被包在keep-alive里面，所有路径匹配到的视图组件都会被缓存**
+
+路由可以配置keep-live ->一旦启用之后就可以使用activated/deactivated（活跃/不活跃）方法
+
+### 4.7 $route和$router的区别
+
+router为VueRouter的实例，相当于一个全局的路由器对象，里面含有很多属性和子对象，
+
+例如history对象，经常用的跳转链接就可以用this.$router.push，和router-link跳转一样
+
+this.$router.push会往history栈中添加一个新的记录
+
+[详细见vue官方文档][https://router.vuejs.org/zh/guide/essentials/navigation.html]
 
 ## 五、Vuex详解
 
