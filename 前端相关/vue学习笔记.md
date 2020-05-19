@@ -918,11 +918,330 @@ this.$router.push会往history栈中添加一个新的记录
 
 [详细见vue官方文档][https://router.vuejs.org/zh/guide/essentials/navigation.html]
 
-## 五、Vuex详解
+## 五、Promise
+
+ES6中解决异步编程的解决方案
+
+```html
+//一般情况下是有异步操作时，使用Promise对这个异步操作进行封装
+  //new ->构造函数（1. 保存一些状态信息，2.执行传入的函数）
+  // 在执行传入的回调函数时，会传入两个参数，resolve,reject本身又是函数
+  new Promise((resolve, reject) => {
+    //此处进行网络请求获取数据但不处理数据
+  }).then(() => {
+    //此处处理网络请求获取的数据
+  })
+```
+
+promise的三种状态
+
+* pending：等待状态，比如正在进行网络请求，或者定时器没到时间
+* fulfill：满足状态，当我们主动回调了resolve时就处于该状态，并且会回调then()
+* reject：拒绝状态，当我们主动回调reject时就处于该状态，并且会回调catch()
+
+```javascript
+//简写形式
+new Promise((resolve, reject) => {
+    setTimeout(() => {
+      //resolve('hello Vue')
+      reject('error message')
+    })
+  }).then(data =>{
+    console.log(data)
+  },err => {
+    console.log(err);
+  })
+```
+
+## 六、Vuex详解
+
+Vuex是一个专门为Vue.js应用程序开发的**状态管理模式**
+
+* 采用**集中式存储管理**应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
+
+什么是状态管理
+
+* 可以理解为将多个组件共享的变量全部存储在一个对象里面，然后将这个对象放在顶层的Vue实例中，让其他组件可以使用
+
+使用步骤
+
+1. 安装vuex
+
+   ```bash
+   npm install vuex --save
+   ```
+
+2. 配置vuex
+
+   ```javascript
+   import Vue from 'vue';
+   import Vuex from 'Vuex'
+   // 1.安装插件
+   Vue.use(Vuex)
+   // 2.创建对象
+   const store = new Vuex.Store({
+     state:{
+       counter:100
+     },
+     mutations:{},
+     actions:{},
+     getters:{},
+     modules:{}
+   })
+   // 3.导出store独享
+   export default store
+   
+   ```
+
+3. 引入store
+
+   ```javascript
+   import Vue from 'vue'
+   import App from './App'
+   import router from './router'
+   import store from './store'
+   
+   Vue.config.productionTip = false
+   
+   /* eslint-disable no-new */
+   new Vue({
+     el: '#app',
+     router,
+     store,
+     render: h => h(App)
+   })
+   
+   ```
+
+**修改Vuex中数据的步骤**
+
+![vuex](https://vuex.vuejs.org/vuex.png)
+
+对state中的数据进行修改时一般不要直接对数据进行修改，而是在mutations中定义对数据操作的方法，在其他组件中对数据进行修改时调用定义的操作方法来实现，便于追踪和调试
+
+```javascript
+mutations:{
+    increment(state) {
+      state.counter++
+    },
+    decrement(state) {
+      state.counter--
+    }
+  },
+```
+
+```javascript
+methods: {
+    addition() {
+      this.$store.commit('increment')
+    },
+    subtraction() {
+      this.$store.commit('decrement')
+    }
+  }
+```
+
+**vuex-getters类似于计算属性**
+
+```javascript
+getters:{
+    //获取counter的平方
+    powerCounter(state) {
+      return state.counter * state.counter
+    },
+    //获取大于20的学生
+    more20Stu(state) {
+      return state.students.filter(s => s.age > 20)
+    },
+    more20StuLength(state,getters){
+      return getters.more20Stu.length;
+    },
+    //获取年龄大于age的学生
+    moreAgeStu(state) {
+      return  function (age) {
+        return state.students.filter(s => s.age > age)
+      }
+    }
+  },
+```
+
+**vuex-mutation状态更新**
+
+Vuex的store状态的更新的唯一的方式，提交Mutation
+
+mutation主要包括两个部分
+
+* 字符串的事件类型（type）
+* 一个回调函数（handler），改回调函数的第一个参数就是state
+
+mutation的响应规则
+
+* 提前在store中初始化好所需的属性
+* 当给state的对象添加新属性时使用下面的方式
+  1. 使用Vue.set(obj,'newPorp',123)
+  2. 用新对象给旧对象重新赋值
+
+> 通常情况下Vuex要求我们Mutations中的方法必须是同步方法
+>
+> 原因是使用devtools时，devtools可以帮我们捕捉mutation的快照，如果是异步的不能很好的追踪操作是什么时候完成的
+
+**Vuex-action的使用**
+
+action的作用与mutation的作用相似，action中可以进行异步操作
+
+```javascript
+actions:{
+    aUpdateInfo(context) {
+      setTimeout(() =>{
+        context.commit('updateInfo')
+      },1000)
+    }
+  }
+```
 
 
 
-## 六、网络封装
+## 七、网络封装
+
+1. 安装axios
+
+   ```shell
+   npm install axios --save
+   ```
+
+2. 引入axios
+
+   ```javascript
+   import axios from 'axios'
+   ```
+
+3. 传入配置
+
+   ```javascript
+   axios({
+     url:''
+   }).then(res => {
+     console.log(res);
+   })
+   ```
+
+开发中有一些重复信息可以进行全局的配置操作
+
+```javascript
+//设置全局配置
+axios.defaults.baseURL = 'xxxx'
+axios.defaults.timeout = 5000
+```
 
 
+
+**创建axios实例**
+
+有时候可能针对不同的请求需要的设置不同，可以创建多个实例来分类分组请求
+
+```javascript
+//创建axios实例
+const instance1 = axios.create({
+  baseURL:'xxxx',
+  timeout:5000
+})
+instance1({
+  url:'/home/multidata'
+}).then(res => {
+  console.log(res);
+})
+```
+
+**对axios的封装**
+
+初步封装
+
+```javascript
+import axios from "axios";
+export function request(config) {
+  return new Promise((resolve, reject) => {
+    //1.创建axios实例
+    const instance = axios.create({
+      baseURL:'xxxx',
+      timeout:5000
+    })
+    //2.发生真正的网络请求
+    instance(config)
+      .then(res => {
+        resolve(res)
+      })
+      .catch(err => {
+        reject(err)
+      })
+  })
+}
+```
+
+简化封装
+
+```javascript
+import axios from "axios";
+
+export function request(config) {
+  //终极封装
+  const instance = axios.create({
+    baseURL:'http://123.207.32.32:8000',
+    timeout:5000
+  })
+  return instance(config)
+}
+```
+
+如何使用自己封装的request
+
+```javascript
+request({
+  url:'/home/multidata'
+}).then(res => {
+  console.log('------request------');
+  console.log(res);
+}).catch(err => {
+  console.log(err);
+})
+```
+
+**axios拦截器的使用**
+
+四种拦截
+
+1. 请求成功
+2. 请求失败
+3. 响应成功
+4. 响应失败
+
+```javascript
+import axios from "axios";
+
+export function request(config) {
+  //1. 创建实例
+  const instance = axios.create({
+    baseURL:'http://123.207.32.32:8000',
+    timeout:5000
+  })
+  //2.使用拦截器
+  instance.interceptors.request.use(config => {
+    console.log('------request success拦截器---------');
+    console.log(config);
+    return config
+  },err => {
+    console.log('------request fail拦截器---------');
+    console.log(err);
+  })
+  instance.interceptors.response.use(result => {
+    console.log('------response success拦截器---------');
+    console.log(result);
+    return result.data
+  },err => {
+    console.log('------response fail拦截器---------');
+    console.log(err);
+  })
+  //3.返回请求promise结果
+  return instance(config)
+}
+```
 
