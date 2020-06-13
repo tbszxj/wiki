@@ -260,3 +260,90 @@ tips：容器之间配信息的传递，数据卷的生命周期一直持续到�
 
 ## 一、DockerFile是什么
 
+DockerFile是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明。
+
+## 二、DockerFile保留字
+
+**FROM**：基础镜像，当前镜像是基于哪个镜像的
+
+**MAINTAINER**:  镜像维护者的姓名和邮箱地址
+
+**RUN**:  容器构建时需要运行的命令
+
+**EXPOSE**:  当前容器对外暴露的端口
+
+**WORKDIR**:  指定在创建容器后，终端默认登陆的进来工作日志，一个落脚点
+
+**ENV**:  用来在构建镜像的过程中设置环境变量
+
+**ADD**:  将宿主机目录下的文件拷贝进镜像且ADD命令会自动处理URL和解压tar压缩包
+
+**COPY**:  复制指令，从上下文目录中复制文件或者目录到容器里指定路径
+
+**VOLUME**:  容器数据卷，用于数据保存和持久化工作
+
+**CMD**:  指定一个容器启动时要运行的命令
+
+​			DockerFile可以有多个CMD命令，但只有最后有个生效，CMD会被docker run之后的参数替换
+
+**ENTRYPOINT**:  指定一个容器启动时要运行的命令
+
+​			ENTRYPOINT的目的和CMD一样，都是在指定容器启动程序及参数
+
+**ONBUILD**:  当构建一个被基础的DockerFile时运行命令，父镜像在被子继承后父镜像的onbuild被触发
+
+## 三、自定义镜像
+
+**自定义centos，默认进入不是根目录，支持vim**
+
+1. 编写DockerFile文件
+
+   ```
+   FROM centos
+   
+   # 设置工作目录即登陆后进入的目录
+   ENV mypath /tmp
+   WORKDIR $mypath
+   
+   # 支持vim
+   RUN yum -y install vim
+   RUN yum -y install net-tools
+   
+   EXPOSE 80
+   CMD /bin/bash
+   ```
+
+2. 构建: docker build -f  DockerFile文件路径 -t 新镜像名字:TAG
+
+   ```shell
+   sudo docker build /home/zxj/workspace/myDockerFile/MyCentos -t mycentos:1.3 .
+   ```
+
+3. 运行
+
+   ```shell
+   sudo docker run -it mycentos:1.3
+   ```
+
+4. 列出镜像的变更历史
+
+   ```shell
+   docker history bdbbb9deb869
+   ```
+
+   ```
+   zxj@iZwz92fz53sfl2nb8ifz74Z:~/workspace/myDockerFile$ sudo docker history bdbbb9deb869
+   IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+   bdbbb9deb869        5 minutes ago       /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "/bin…   0B
+   8ff776f19940        5 minutes ago       /bin/sh -c #(nop)  EXPOSE 80                    0B
+   e9b4c57ed1dc        5 minutes ago       /bin/sh -c yum -y install net-tools             24MB
+   9391d9d3fda8        7 minutes ago       /bin/sh -c yum -y install vim                   59.8MB
+   cf0f0e048f93        7 minutes ago       /bin/sh -c #(nop) WORKDIR /usr/local            0B
+   b4f1533671cf        7 minutes ago       /bin/sh -c #(nop)  ENV mypath=/usr/local        0B
+   470671670cac        4 months ago        /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B
+   <missing>           4 months ago        /bin/sh -c #(nop)  LABEL org.label-schema.sc…   0B
+   <missing>           5 months ago        /bin/sh -c #(nop) ADD file:aa54047c80ba30064…   237MB
+   ```
+
+   
+
