@@ -345,5 +345,196 @@ DockerFile是一个用来构建镜像的文本文件，文本内容包含了一�
    <missing>           5 months ago        /bin/sh -c #(nop) ADD file:aa54047c80ba30064…   237MB
    ```
 
-   
 
+## 四、CMD和ENTRYPOINT的区别
+
+**CMD**:  DockerFile可以有多个CMD命令，但只有最后有个生效，CMD会被docker run之后的参数替换
+
+**ENTRYPOINT**:  
+
+以tomcat为例
+
+1. 使用CMD命令运行，运行下面命令相当于在DockerFile文件最后添加一个`CMD ls -l`由于最后一个CMD命令生效，会导致原先要启动tomcat的命令失效
+
+   ```shell
+   docker run -it -p 8888:8080 tomcat ls -l
+   ```
+
+2. 使用ENTRYPOINT相比CMD命令，如果后面有参数不会被替换而是被追加
+
+   例如：创建一个可以使用curl的centos容器
+
+   **CMD命令版本**
+
+   ```
+   FROM centos
+   
+   # 支持curl
+   RUN yum -y install curl
+   
+   CMD ["curl", "-s", "http://ip.cn"]
+   ```
+
+   ```shell
+   sudo docker build -f centos-curl -t myip .
+   
+   docker images myip
+   
+   docker run -it myip
+   
+   # 下面命令将会失效
+   docker run -it myip -i
+   # 可以用下面的命令替换上面的
+   docker run -it myip curl -s https://ip.cn-i
+   ```
+
+   **ENTRYPOINT命令版本**
+
+   ```
+   FROM centos
+   
+   # 支持curl
+   RUN yum -y install curl
+   
+   ENTRYPOINT ["curl", "-s", "http://ip.cn"]
+   ```
+
+   ```
+   sudo docker build -f centos-curl -t myip .
+   
+   docker images myip
+   
+   docker run -it myip
+   
+   # 下面命令将有效
+   docker run -it myip -i
+   ```
+
+## 五、ONBUILD命令
+
+当构建一个被基础的DockerFile时运行命令，父镜像在被子j镜像继承后父镜像的onbuild被触发
+
+```
+FROM centos
+
+# 支持curl
+RUN yum -y install curl
+
+ENTRYPOINT ["curl", "-s", "http://ip.cn"]
+ONBUILD RUN echo "father on build---------886"
+```
+
+创建myip_father镜像
+
+```shell
+sudo docker build -f myip_father -t myip_father .
+```
+
+从父镜像继承出一个子镜像
+
+```shell
+FROM myip_father
+
+# 支持curl
+RUN yum -y install curl
+
+ENTRYPOINT ["curl", "-s", "http://ip.cn"]
+```
+
+```shell
+# 构建子镜像
+sudo docker build -f myip_children -t myip_children .
+```
+
+打印的日志
+
+```
+Sending build context to Docker daemon   5.12kB
+Step 1/3 : FROM myip_father
+# Executing 1 build trigger
+ ---> Running in ff492ed89158
+father on build---------886
+Removing intermediate container ff492ed89158
+ ---> 1602b16530b6
+Step 2/3 : RUN yum -y install curl
+ ---> Running in 55426d86a0e2
+Last metadata expiration check: 0:18:01 ago on Mon Jun 15 13:54:02 2020.
+Package curl-7.61.1-11.el8.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Removing intermediate container 55426d86a0e2
+ ---> 43d09a2fe879
+Step 3/3 : ENTRYPOINT ["curl", "-s", "http://ip.cn"]
+ ---> Running in 81b9ea3d4fb9
+Removing intermediate container 81b9ea3d4fb9
+ ---> 97634bbe2682
+Successfully built 97634bbe2682
+Successfully tagged myip_children:latest
+```
+
+## 六、自定义tomcat9
+
+1. 创建tomcat文件夹
+
+   ```shell
+   sudo mkdir tomcat9
+   ```
+
+2. 在该目录下创建一个文本文件，用于演示copy功能
+
+   ```shell
+   touch c.txt
+   ```
+
+3. tomcat9文件夹下应有如下四个文件
+
+   ```
+   -rw-r--r-- 1 root root  11026056 Jun 15 22:20 apache-tomcat-9.0.30.tar.gz
+   -rw-r--r-- 1 root root         0 Jun 15 22:21 c.txt
+   -rw-r--r-- 1 root root        12 Jun 15 22:23 Dockerfile
+   -rw-r--r-- 1 root root 185516505 Jul 13  2017 jdk-8u141-linux-x64.tar.gz
+   ```
+
+4. DockerFile文件如下
+
+   ```
+   FROM centos
+   MAINTAINER tbszxj@qq.com
+   # 把宿主机当前目录下的c.txt拷贝到容器/usr/local路径下
+   COPY c.txt /usr/local/cincontainer.txt
+   # 把java与tomcat添加到容器中
+   ADD apache-tomcat-9.0.30.tar.gz /usr/local/
+   ADD jdk-8u141-linux-x64.tar.gz /usr/local/
+   # 安装vim编辑器
+   RUN yum -y install vim
+   # 设置工作访问时候的WORKDIR路径，登录落脚点
+   ENV MYPATH /usr/local
+   WORKDIR $MYPATH
+   # 配置java与tomcat环境变量
+   ENV JAVA_HOME /usr/local/jdkl.8.0_141
+   ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+   ENV CATALINA_HOME /usr/local/apache-tomcat-9.0.30
+   ENV CATALINA_BASE /usr/local/apache-tomcat-9.0.30
+   ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/lib:$CATALINA_HOME/bin
+   #容器运行时监听的端口
+   EXPOSE 8080
+   #后动时运行tomcat
+   # ENTRYPOINT ["/usr/local/apache-tomcat-9.0.30/bin/startup.sh”]
+   # CMD [“/usr/local/apache-tomcat-9.0.30/bin/catalina.sh”]
+   CMD /usr/local/apache-tomcat-9.0.30/bin/startup.sh && tail -F /usr/local/apache-tomcat-9.0.30/bin/log/catalina.out
+   ```
+
+5. 构建镜像
+
+   ```shell
+   sudo docker build -t mytomcat9 .
+   ```
+
+6. 运行容器
+
+   ```shell
+   sudo docker run -d -p 9000:8080 --name myt9 -v /home/zxj/workspace/myDockerFile/tomcat9/test:/usr/local/apache-tomcat-9.0.30/webapps/test -v /home/zxj/workspace/myDockerFile/tomcat9/tomcat9logs/:/usr/local/apache-tomcat-9.0.30/logs --privileged=true mytomcat9
+   ```
+
+   
