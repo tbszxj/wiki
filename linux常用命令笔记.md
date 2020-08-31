@@ -102,11 +102,19 @@ cat -n test.log |tail -n +92|head -n 20
 cat -n test.log |grep "debug" |more
 ```
 
-
+### 其他命令
 
 启动nacos单机部署模式
 
 ```shell
 bash startup.sh -m standalone
+```
+
+
+
+统计目录下子文件夹和文件数量
+
+```shell
+ls | wc -l
 ```
 
