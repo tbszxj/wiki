@@ -118,3 +118,11 @@ bash startup.sh -m standalone
 ls | wc -l
 ```
 
+### yum和rpm递归依赖解析
+
+```shell
+repoquery -a --tree-requires PACKAGE
+
+repoquery -a --tree-requires PACKAGE | sed 's/^[ |]*\\_\s*\(\S\+\)/\1/' | grep -Eo '^\S+' | sort | uniq
+```
+
