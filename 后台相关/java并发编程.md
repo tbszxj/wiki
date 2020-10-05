@@ -69,6 +69,33 @@
   ```shell
   # 在一个空目录生成一个测试项目
   mvn archetype:generate -DinteractiveMode=false -DarchetypeGroupId=org.openjdk.jmh -DarchetypeArtifactId=jmh-java-benchmark-archetype -DgroupId=com.jenkov -DartifactId=first-benchmark -Dversion=1.0
-```
-  
-  
+  ```
+## 创建和运行线程
+
+### 常见的创建线程的方式
+
+1. 继承Thread重写run方法
+2. 实现runnable接口
+3. futuretask方法
+
+### 查看线程的方式
+
+**Windows**
+
+* 任务管理器可以查看进程和线程也可以杀死进程
+* tasklist查看进程
+* taskkill杀死进程
+
+**Linux**
+
+* ps -fe查看所有进程
+* ps -fT -p <PID> 查看某个进程PID的所有线程
+* kill 杀死进程
+* top 按大写H切换是否显示线程
+* top -H -p  <PID> 查看某个进程的所有线程
+
+**Java**
+
+* jsp命令查看所有java进程
+* jstack <PID> 查看某个java进程的所有线程状态
+* jconsole 来查看某个java进程中线程的运行情况（图形界面）
