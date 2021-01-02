@@ -177,7 +177,6 @@ rpop key
   lrem key count value
   ```
 
-  
 
 **list应用场景**
 
@@ -228,8 +227,6 @@ sismember key member
   spop key
   ```
 
-  
-
 * 求集合的交、并、差集
 
   ```shell
@@ -237,8 +234,6 @@ sismember key member
   sunit key1 [key2]
   sdiff key1 [key2]
   ```
-
-  
 
 * 求集合的交、并、差集并存储到指定的集合中
 
@@ -248,15 +243,12 @@ sismember key member
   sdiffstore destination key1 [key2]
   ```
 
-  
-
 * 将指定数据从原始集合中移动到目标集合中
 
   ```shell
   smove source destiontion member
   ```
 
-  
 
 统计网站的访问量，统计网站的PV(访问量) UV(独立访客) IP(独立IP)
 
@@ -315,8 +307,6 @@ zrem key member [member ...]
   zcount key min max
   ```
 
-  
-
 * 集合交、并操作、
 
   ```shell
@@ -324,7 +314,6 @@ zrem key member [member ...]
   zunionstore destination numkeys key [key...]
   ```
 
-  
 
 **应用场景**
 
@@ -354,7 +343,101 @@ zrem key member [member ...]
 
   * 对于带有权重的任务，优先处理权重高的任务，采用score记录权重
 
-
-
 ## 通用指令
 
+**key相关通用命令**
+
+* 基本操作
+
+  ```shell
+  # 删除指定key
+  del key
+  # 获取key是否存在
+  exists key
+  # 获取key的类型
+  type key
+  ```
+
+* 时效性操作
+
+  ```shell
+  # 为指定key设置有效期
+  expire key seconds
+  
+  pexpire key milliseconds
+  
+  expireat key timestamp
+  
+  pexpireat key milliseconds-timestamp
+  
+  # 获取key的有效时间
+  ttl key
+  pttl key
+  
+  # 切换key从时效性转换为永久性
+  persist key
+  ```
+
+* 查询操作
+
+  ```shell
+  keys pattern
+  
+  # keys * 查询所有
+  # keys it* 查询所有以it开头
+  # keys *name 查询所有以name结尾的
+  # keys ??name 查询所有前面两个字符任意，后面以name结尾
+  # keys user:? 查询所有user:开头，最后一个字符任意
+  # keys u[st]er:1 查询所有以u开头，以er:1结尾，中间包含一个字母，s或t
+  ```
+
+* 其他操作
+
+  ```shell
+  # 为key改名
+  rename key newkey
+  renamenx key newkey
+  # 对所有key排序
+  sort
+  # 其他key通用操作
+  help @generic
+  ```
+
+**数据库相关通用命令**
+
+* 基本操作
+
+  ```shell
+  select index
+  ```
+
+* 其他操作
+
+  ```shell
+  quit
+  
+  ping
+  
+  echo message
+  ```
+
+* db相关操作
+
+  ```shell
+  move key db
+  ```
+
+* 数据清除
+
+  ```shell
+  # 查看数据总量
+  dbsize
+  
+  # 清除某个库下的数据
+  flushdb
+  
+  # 清除全部数据库的全部数据
+  flushall
+  ```
+
+  
